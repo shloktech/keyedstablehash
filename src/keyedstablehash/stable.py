@@ -29,6 +29,21 @@ class KeyedStableHash:
 
 
 def stable_keyed_hash(value: Any, key: bytes, algo: str = "siphash24") -> KeyedStableHash:
+    """
+    Hash a Python object deterministically using a keyed PRF.
+
+    Args:
+        value: Any Python object (dict, list, tuple, set, int, float, str, bytes, etc.)
+        key: 16-byte key for SipHash-2-4
+        algo: Hash algorithm to use (default: "siphash24")
+
+    Returns:
+        KeyedStableHash object with digest(), hexdigest(), and intdigest() methods.
+
+    Raises:
+        ValueError: If algo is unsupported
+        TypeError: If value contains unsupported types
+    """
     hasher = _select_hasher(algo, key)
     feed_canonical(value, hasher.update)
     return KeyedStableHash(hasher.digest())

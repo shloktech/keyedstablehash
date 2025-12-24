@@ -44,6 +44,18 @@ class SipHash24:
         return dup
 
     def update(self, data: bytes) -> "SipHash24":
+        """
+        Update the hash state with new data. Supports method chaining.
+
+        Args:
+            data: Bytes-like object to hash
+
+        Returns:
+            Self for method chaining
+
+        Raises:
+            TypeError: If data is not bytes-like
+        """
         if not isinstance(data, (bytes, bytearray, memoryview)):
             raise TypeError("data must be bytes-like")
 
