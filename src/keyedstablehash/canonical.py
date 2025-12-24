@@ -19,7 +19,11 @@ def _encode_length(length: int) -> bytes:
 def _encode_int(value: int) -> bytes:
     if value == 0:
         return b"\x00"
-    length = max(1, (value.bit_length() + 8) // 8)
+    # For negative integers, use bit_length of -(value+1) to get minimum bytes needed
+    if value < 0:
+        length = max(1, ((-value - 1).bit_length() + 8) // 8)
+    else:
+        length = max(1, (value.bit_length() + 8) // 8)
     return value.to_bytes(length, byteorder="big", signed=True)
 
 
@@ -30,6 +34,23 @@ def _normalize_scalar(value: Any) -> Any:
 
 
 def feed_canonical(value: Any, write: Callable[[bytes], None]) -> None:
+    """
+    Recursively canonicalize a Python object and feed encoded bytes to a write callback.
+
+    Canonicalization rules:
+    - None, bool, int, float, str, bytes are tagged and length-prefixed
+    - list/tuple are ordered; set/frozenset are unordered (sorted by encoded bytes)
+    - dict is unordered (items sorted by encoded key bytes)
+    - numpy scalars are converted to Python scalars
+    - Objects with __dict__ are handled by their type name + vars
+
+    Args:
+        value: Any Python object to canonicalize
+        write: Callback function that accepts bytes, typically buf.extend or hasher.update
+
+    Raises:
+        TypeError: If value contains an unsupported type
+    """
     value = _normalize_scalar(value)
 
     if value is None:
@@ -111,6 +132,18 @@ def feed_canonical(value: Any, write: Callable[[bytes], None]) -> None:
 
 
 def canonicalize_to_bytes(value: Any) -> bytes:
+    """
+    Canonicalize a Python object to bytes.
+
+    Args:
+        value: Any Python object to canonicalize
+
+    Returns:
+        Canonical byte representation of the object
+
+    Raises:
+        TypeError: If value contains an unsupported type
+    """
     buf = bytearray()
     feed_canonical(value, buf.extend)
     return bytes(buf)
