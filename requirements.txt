@@ -1,0 +1,7 @@
+setuptools>=68
+wheel
+# Optional dependencies
+pandas>=1.5  # dataframes
+pyarrow>=12.0.0  # arrow
+polars>=0.20.0  # polars
+pytest>=7.0  # dev
