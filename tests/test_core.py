@@ -76,9 +76,9 @@ def test_feed_canonical_dict_order():
 
 
 def test_feed_canonical_list_vs_tuple():
-    l = [1, 2, 3]
+    lst = [1, 2, 3]
     t = (1, 2, 3)
-    assert canonicalize_to_bytes(l) != canonicalize_to_bytes(t)
+    assert canonicalize_to_bytes(lst) != canonicalize_to_bytes(t)
 
 
 def test_feed_canonical_set_order():

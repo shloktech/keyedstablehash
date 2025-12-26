@@ -33,6 +33,92 @@ def _normalize_scalar(value: Any) -> Any:
     return value
 
 
+def _handle_none(value, write):
+    write(b"N")
+
+
+def _handle_bool(value, write):
+    write(b"B" + (b"\x01" if value else b"\x00"))
+
+
+def _handle_int(value, write):
+    encoded = _encode_int(value)
+    write(b"I")
+    write(_encode_length(len(encoded)))
+    write(encoded)
+
+
+def _handle_float(value, write):
+    write(b"F")
+    write(struct.pack("<d", float(value)))
+
+
+def _handle_bytes(value, write):
+    data = bytes(value)
+    write(b"Y")
+    write(_encode_length(len(data)))
+    write(data)
+
+
+def _handle_str(value, write):
+    encoded = value.encode("utf-8")
+    write(b"S")
+    write(_encode_length(len(encoded)))
+    write(encoded)
+
+
+def _handle_sequence(value, write):
+    tag = b"L" if isinstance(value, list) else b"T"
+    write(tag)
+    write(_encode_length(len(value)))
+    for item in value:
+        feed_canonical(item, write)
+
+
+def _handle_set(value, write):
+    write(b"E")
+    encoded_items = []
+    for item in value:
+        item_buffer = bytearray()
+        feed_canonical(item, item_buffer.extend)
+        encoded_items.append(bytes(item_buffer))
+    encoded_items.sort()
+    write(_encode_length(len(encoded_items)))
+    for chunk in encoded_items:
+        write(_encode_length(len(chunk)))
+        write(chunk)
+
+
+def _handle_mapping(value, write):
+    write(b"D")
+    encoded_items = []
+    for key, val in value.items():
+        key_buffer = bytearray()
+        val_buffer = bytearray()
+        feed_canonical(key, key_buffer.extend)
+        feed_canonical(val, val_buffer.extend)
+        encoded_items.append((bytes(key_buffer), bytes(val_buffer)))
+    encoded_items.sort(key=lambda pair: pair[0])
+    write(_encode_length(len(encoded_items)))
+    for key_bytes, val_bytes in encoded_items:
+        write(_encode_length(len(key_bytes)))
+        write(key_bytes)
+        write(_encode_length(len(val_bytes)))
+        write(val_bytes)
+
+
+def _handle_object(value, write):
+    write(b"O")
+    type_name = (
+        f"{value.__class__.__module__}.{value.__class__.__qualname__}".encode(
+            "utf-8"
+        )
+    )
+    write(_encode_length(len(type_name)))
+    write(type_name)
+    feed_canonical(vars(value), write)
+
+
 def feed_canonical(value: Any, write: Callable[[bytes], None]) -> None:
     """
     Recursively canonicalize a Python object and feed encoded bytes to a write callback.
@@ -54,80 +140,34 @@ def feed_canonical(value: Any, write: Callable[[bytes], None]) -> None:
     value = _normalize_scalar(value)
 
     if value is None:
-        write(b"N")
+        _handle_none(value, write)
         return
     if isinstance(value, bool):
-        write(b"B" + (b"\x01" if value else b"\x00"))
+        _handle_bool(value, write)
         return
     if isinstance(value, int):
-        encoded = _encode_int(value)
-        write(b"I")
-        write(_encode_length(len(encoded)))
-        write(encoded)
+        _handle_int(value, write)
         return
     if isinstance(value, float):
-        write(b"F")
-        write(struct.pack("<d", float(value)))
+        _handle_float(value, write)
         return
     if isinstance(value, (bytes, bytearray, memoryview)):
-        data = bytes(value)
-        write(b"Y")
-        write(_encode_length(len(data)))
-        write(data)
+        _handle_bytes(value, write)
         return
     if isinstance(value, str):
-        encoded = value.encode("utf-8")
-        write(b"S")
-        write(_encode_length(len(encoded)))
-        write(encoded)
+        _handle_str(value, write)
         return
     if isinstance(value, (list, tuple)):
-        tag = b"L" if isinstance(value, list) else b"T"
-        write(tag)
-        write(_encode_length(len(value)))
-        for item in value:
-            feed_canonical(item, write)
+        _handle_sequence(value, write)
         return
     if isinstance(value, (set, frozenset)):
-        write(b"E")
-        encoded_items = []
-        for item in value:
-            buf = bytearray()
-            feed_canonical(item, buf.extend)
-            encoded_items.append(bytes(buf))
-        encoded_items.sort()
-        write(_encode_length(len(encoded_items)))
-        for chunk in encoded_items:
-            write(_encode_length(len(chunk)))
-            write(chunk)
+        _handle_set(value, write)
         return
     if isinstance(value, Mapping):
-        write(b"D")
-        encoded_items = []
-        for key, val in value.items():
-            key_buf = bytearray()
-            val_buf = bytearray()
-            feed_canonical(key, key_buf.extend)
-            feed_canonical(val, val_buf.extend)
-            encoded_items.append((bytes(key_buf), bytes(val_buf)))
-        encoded_items.sort(key=lambda pair: pair[0])
-        write(_encode_length(len(encoded_items)))
-        for key_bytes, val_bytes in encoded_items:
-            write(_encode_length(len(key_bytes)))
-            write(key_bytes)
-            write(_encode_length(len(val_bytes)))
-            write(val_bytes)
+        _handle_mapping(value, write)
         return
     if hasattr(value, "__dict__"):
-        write(b"O")
-        type_name = (
-            f"{value.__class__.__module__}.{value.__class__.__qualname__}".encode(
-                "utf-8"
-            )
-        )
-        write(_encode_length(len(type_name)))
-        write(type_name)
-        feed_canonical(vars(value), write)
+        _handle_object(value, write)
         return
 
     raise TypeError(f"Unsupported type for stable hashing: {type(value)!r}")
