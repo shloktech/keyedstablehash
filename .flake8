@@ -1,3 +1,2 @@
 [flake8]
-exclude = setup.py
-
+exclude = setup.py,tests/
