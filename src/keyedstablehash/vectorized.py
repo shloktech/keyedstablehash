@@ -12,7 +12,9 @@ def hash_pandas_series(series: Any, key: bytes, algo: str = "siphash24"):
     try:
         import pandas as pd  # type: ignore
     except ModuleNotFoundError as exc:  # pragma: no cover - optional dependency
-        raise ImportError("pandas is required for hash_pandas_series") from exc
+        raise ImportError(
+            "Install pandas to use hash_pandas_series: pip install pandas"
+        ) from exc
 
     hashes = [stable_keyed_hash(val, key=key, algo=algo).intdigest() for val in series]
     return pd.Series(hashes, index=getattr(series, "index", None), dtype="uint64")
@@ -25,7 +27,9 @@ def hash_arrow_array(array: Any, key: bytes, algo: str = "siphash24"):
     try:
         import pyarrow as pa  # type: ignore
     except ModuleNotFoundError as exc:  # pragma: no cover - optional dependency
-        raise ImportError("pyarrow is required for hash_arrow_array") from exc
+        raise ImportError(
+            "Install pyarrow to use hash_arrow_array: pip install pyarrow"
+        ) from exc
 
     arr = array if hasattr(array, "to_pylist") else pa.array(array)
     hashes = [
@@ -46,7 +50,9 @@ def hash_polars_series(series: Any, key: bytes, algo: str = "siphash24"):
     try:
         import polars as pl  # type: ignore
     except ModuleNotFoundError as exc:  # pragma: no cover - optional dependency
-        raise ImportError("polars is required for hash_polars_series") from exc
+        raise ImportError(
+            "Install polars to use hash_polars_series: pip install polars"
+        ) from exc
 
     ser = series if hasattr(series, "dtype") else pl.Series(series)
     hashes = [stable_keyed_hash(val, key=key, algo=algo).intdigest() for val in ser]

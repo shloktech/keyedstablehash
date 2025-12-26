@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 import pytest
 
 from src.keyedstablehash.canonical import canonicalize_to_bytes
@@ -76,9 +80,9 @@ def test_feed_canonical_dict_order():
 
 
 def test_feed_canonical_list_vs_tuple():
-    l = [1, 2, 3]
+    lst = [1, 2, 3]
     t = (1, 2, 3)
-    assert canonicalize_to_bytes(l) != canonicalize_to_bytes(t)
+    assert canonicalize_to_bytes(lst) != canonicalize_to_bytes(t)
 
 
 def test_feed_canonical_set_order():
