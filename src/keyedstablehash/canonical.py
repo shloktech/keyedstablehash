@@ -33,7 +33,7 @@ def _normalize_scalar(value: Any) -> Any:
     return value
 
 
-def _handle_none(value, write):
+def _handle_none(_unused, write):
     write(b"N")
 
 
@@ -79,8 +79,10 @@ def _handle_set(value, write):
     write(b"E")
     encoded_items = []
     for item in value:
+        def write_bytes(b):
+            item_buffer.extend(b)
         item_buffer = bytearray()
-        feed_canonical(item, item_buffer.extend)
+        feed_canonical(item, write_bytes)
         encoded_items.append(bytes(item_buffer))
     encoded_items.sort()
     write(_encode_length(len(encoded_items)))
@@ -93,10 +95,14 @@ def _handle_mapping(value, write):
     write(b"D")
     encoded_items = []
     for key, val in value.items():
+        def write_key_bytes(b):
+            key_buffer.extend(b)
+        def write_val_bytes(b):
+            val_buffer.extend(b)
         key_buffer = bytearray()
         val_buffer = bytearray()
-        feed_canonical(key, key_buffer.extend)
-        feed_canonical(val, val_buffer.extend)
+        feed_canonical(key, write_key_bytes)
+        feed_canonical(val, write_val_bytes)
         encoded_items.append((bytes(key_buffer), bytes(val_buffer)))
     encoded_items.sort(key=lambda pair: pair[0])
     write(_encode_length(len(encoded_items)))
@@ -166,10 +172,13 @@ def feed_canonical(value: Any, write: Callable[[bytes], None]) -> None:
     if isinstance(value, Mapping):
         _handle_mapping(value, write)
         return
+    _try_handle_object(value, write)
+
+
+def _try_handle_object(value, write):
     if hasattr(value, "__dict__"):
         _handle_object(value, write)
         return
-
     raise TypeError(f"Unsupported type for stable hashing: {type(value)!r}")
 
 
@@ -187,7 +196,9 @@ def canonicalize_to_bytes(value: Any) -> bytes:
         TypeError: If value contains an unsupported type
     """
     buf = bytearray()
-    feed_canonical(value, buf.extend)
+    def write_bytes(b):
+        buf.extend(b)
+    feed_canonical(value, write_bytes)
     return bytes(buf)
 
 
