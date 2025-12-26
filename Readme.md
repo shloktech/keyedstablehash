@@ -2,9 +2,7 @@
   <img src="https://raw.githubusercontent.com/shloktech/keyedstablehash/main/docs/keyedstablehash_logo.png" alt="keyedstablehash Logo" width="300" style="border-radius: 20px;">
 </p>
 
-# keyedstablehash
 
-**Deterministic, cryptographically secure hashing for complex Python objects and columnar data.**
 
 | | |
 | :--- | :--- |
