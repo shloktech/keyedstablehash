@@ -3,6 +3,16 @@ keyedstablehash
 
 Stable, keyed hashing for Python objects and columnar data. Think `stablehash`, but with SipHash-like keyed PRF semantics so hashes are deterministic for a given key and resistant to adversarial inputs.
 
+Why this project is better than others
+--------------------------------------
+- Deterministic, stable hashes for complex Python objects, ensuring reproducibility.
+- Keyed hashing (SipHash-2-4) for security against adversarial inputs.
+- Canonicalization rules for consistent hashing of nested and unordered structures.
+- Streaming API and batch helpers for efficient hashing of large datasets (pandas, pyarrow, polars).
+- Type hints and `py.typed` support for better IDE experience.
+- Pure Python implementation with optional C/Rust backend for speed.
+- Robust, secure, and user-friendly for data science and security use cases compared to typical hash libraries.
+
 Why this exists
 ---------------
 - Stable hashing of Python objects (dicts, lists, numbers, strings) with explicit canonicalization rules.
