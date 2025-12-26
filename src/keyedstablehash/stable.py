@@ -28,7 +28,9 @@ class KeyedStableHash:
         return int.from_bytes(self._digest, byteorder="little", signed=False)
 
 
-def stable_keyed_hash(value: Any, key: bytes, algo: str = "siphash24") -> KeyedStableHash:
+def stable_keyed_hash(
+    value: Any, key: bytes, algo: str = "siphash24"
+) -> KeyedStableHash:
     """
     Hash a Python object deterministically using a keyed PRF.
 
