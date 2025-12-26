@@ -1,3 +1,23 @@
+<p align="center">
+    <em>Stable, secure, and reproducible hashing for Python objects and dataframes</em>
+</p>
+<p align="center">
+<a href="https://github.com/shloktech/keyedstablehash/actions?query=workflow%3ATest+event%3Apush+branch%3Amain" target="_blank">
+    <img src="https://github.com/shloktech/keyedstablehash/actions/workflows/python-package.yml/badge.svg?event=push&branch=main" alt="Test">
+</a>
+<a href="https://codecov.io/gh/shloktech/keyedstablehash" target="_blank">
+    <img src="https://codecov.io/gh/shloktech/keyedstablehash/branch/main/graph/badge.svg" alt="Coverage">
+</a>
+<a href="https://pypi.org/project/keyedstablehash" target="_blank">
+    <img src="https://img.shields.io/pypi/v/keyedstablehash?color=%2334D058&label=pypi%20package" alt="Package version">
+</a>
+<a href="https://pypi.org/project/keyedstablehash" target="_blank">
+    <img src="https://img.shields.io/pypi/pyversions/keyedstablehash.svg?color=%2334D058" alt="Supported Python versions">
+</a>
+</p>
+
+---
+
 # keyedstablehash
 
 **Deterministic, cryptographically secure hashing for complex Python objects and columnar data.**
@@ -150,5 +170,3 @@ To ensure stability, `keyedstablehash` strictly defines how types are converted 
 1. **C/Rust Backend:** Replace the inner loop with a compiled extension (Rust or C) for significant speedups.
 2. **Contract Tests:** Add cross-version compatibility contracts to ensure hash stability across future library updates.
 3. **Vectorized Kernels:** Move columnar hashing entirely to C/Rust to avoid per-row Python overhead.
-
----
