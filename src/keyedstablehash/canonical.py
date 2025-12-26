@@ -79,9 +79,11 @@ def _handle_set(value, write):
     write(b"E")
     encoded_items = []
     for item in value:
-        def write_bytes(b):
-            item_buffer.extend(b)
         item_buffer = bytearray()
+
+        def write_bytes(b, buf=item_buffer):
+            buf.extend(b)
+
         feed_canonical(item, write_bytes)
         encoded_items.append(bytes(item_buffer))
     encoded_items.sort()
@@ -95,12 +97,15 @@ def _handle_mapping(value, write):
     write(b"D")
     encoded_items = []
     for key, val in value.items():
-        def write_key_bytes(b):
-            key_buffer.extend(b)
-        def write_val_bytes(b):
-            val_buffer.extend(b)
         key_buffer = bytearray()
         val_buffer = bytearray()
+
+        def write_key_bytes(b, buf=key_buffer):
+            buf.extend(b)
+
+        def write_val_bytes(b, buf=val_buffer):
+            buf.extend(b)
+
         feed_canonical(key, write_key_bytes)
         feed_canonical(val, write_val_bytes)
         encoded_items.append((bytes(key_buffer), bytes(val_buffer)))
@@ -116,9 +121,9 @@ def _handle_mapping(value, write):
 def _handle_object(value, write):
     write(b"O")
     type_name = (
-        f"{value.__class__.__module__}.{value.__class__.__qualname__}".encode(
-            "utf-8"
-        )
+        f"{value.__class__.__module__}."
+        f"{value.__class__.__qualname__}"
+        .encode("utf-8")
     )
     write(_encode_length(len(type_name)))
     write(type_name)
@@ -196,8 +201,10 @@ def canonicalize_to_bytes(value: Any) -> bytes:
         TypeError: If value contains an unsupported type
     """
     buf = bytearray()
+
     def write_bytes(b):
         buf.extend(b)
+
     feed_canonical(value, write_bytes)
     return bytes(buf)
 
