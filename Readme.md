@@ -89,6 +89,8 @@ Mirrors the standard `hashlib` interface for data streams.
 ```python
 from keyedstablehash import siphash24
 
+secret_key = b"\x01" * 16
+
 s = siphash24(key=secret_key)
 s.update(b"chunk_one")
 s.update(b"chunk_two")
@@ -107,15 +109,19 @@ import pandas as pd
 import pyarrow as pa
 from keyedstablehash import hash_pandas_series, hash_arrow_array
 
+secret_key = b"\x01" * 16
+
 # --- Pandas ---
 df = pd.DataFrame({"user_id": ["u1", "u2", "u1"]})
 df["hash"] = hash_pandas_series(df["user_id"], key=secret_key)
 # Result: A Series of uint64 hashes
+print(df["hash"])
 
 # --- PyArrow ---
 arr = pa.array(["alpha", "beta", "gamma"])
 hashes = hash_arrow_array(arr, key=secret_key)
 # Result: A pyarrow.Array(uint64)
+print(hashes)
 
 ```
 
