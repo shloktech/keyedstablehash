@@ -30,8 +30,8 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
-        # Only allow line too long (E501), fail on all other errors
-        flake8 . --count --select=E501 --max-line-length=79 --statistics
+        # Ignore E501 (line too long), fail on all other errors
+        flake8 . --count --ignore=E501 --statistics
     - name: Test with pytest and coverage
       run: |
-        pytest --cov=src/keyedstablehash --cov-report=term --cov-report=xml
+        PYTHONPATH=src pytest --cov=keyedstablehash --cov-report=term --cov-report=xml
