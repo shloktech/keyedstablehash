@@ -7,3 +7,4 @@ polars>=0.20.0  # polars
 pytest>=7.0  # dev
 coverage>=6.0  # dev
 pytest-cov>=4.0  # dev
+flake8>=6.0  # dev
