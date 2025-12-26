@@ -1,26 +1,22 @@
 <p align="center">
-    <em>Stable, secure, and reproducible hashing for Python objects and dataframes</em>
+  <img src="docs/keyedstablehash_logo.png" alt="keyedstablehash Logo" width="300" style="border-radius: 20px;">
 </p>
-<p align="center">
-<a href="https://github.com/shloktech/keyedstablehash/actions?query=workflow%3ATest+event%3Apush+branch%3Amain" target="_blank">
-    <img src="https://github.com/shloktech/keyedstablehash/actions/workflows/python-package.yml/badge.svg?event=push&branch=main" alt="Test">
-</a>
-<a href="https://codecov.io/gh/shloktech/keyedstablehash" target="_blank">
-    <img src="https://codecov.io/gh/shloktech/keyedstablehash/branch/main/graph/badge.svg" alt="Coverage">
-</a>
-<a href="https://pypi.org/project/keyedstablehash" target="_blank">
-    <img src="https://img.shields.io/pypi/v/keyedstablehash?color=%2334D058&label=pypi%20package" alt="Package version">
-</a>
-<a href="https://pypi.org/project/keyedstablehash" target="_blank">
-    <img src="https://img.shields.io/pypi/pyversions/keyedstablehash.svg?color=%2334D058" alt="Supported Python versions">
-</a>
-</p>
-
----
 
 # keyedstablehash
 
 **Deterministic, cryptographically secure hashing for complex Python objects and columnar data.**
+
+
+| |                                                                                                                                                                                                                                                                                                                                                                    |
+| --- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Testing | [![Build, Test & Coverage](https://github.com/shloktech/keyedstablehash/actions/workflows/python-package.yml/badge.svg)](https://github.com/shloktech/keyedstablehash/actions/workflows/python-package.yml) [![codecov](https://codecov.io/github/shloktech/keyedstablehash/graph/badge.svg?token=CHQUZ5WUEA)](https://codecov.io/github/shloktech/keyedstablehash) |
+| Package |                                                                                                                                     |
+| Meta | [![License](https://img.shields.io/github/license/shloktech/keyedstablehash.svg)](https://github.com/shloktech/keyedstablehash/blob/main/LICENSE)                                                                                                                                                                                                                  |
+                                              |
+
+---
+
+
 
 `keyedstablehash` solves the problem of generating reproducible, secure hashes for arbitrary Python structures (dicts, lists, primitives) across different processes and machines. Think of it as `stablehash` meets `hashlib`, powered by the **SipHash-2-4** algorithm to prevent hash-flooding attacks.
 
