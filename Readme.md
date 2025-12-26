@@ -1,33 +1,36 @@
 <p align="center">
-  <img src="docs/keyedstablehash_logo.png" alt="keyedstablehash Logo" width="300" style="border-radius: 20px;">
+  <img src="https://raw.githubusercontent.com/shloktech/keyedstablehash/main/docs/keyedstablehash_logo.png" alt="keyedstablehash Logo" width="300" style="border-radius: 20px;">
 </p>
 
 # keyedstablehash
 
 **Deterministic, cryptographically secure hashing for complex Python objects and columnar data.**
 
-
-| |                                                                                                                                                                                                                                                                                                                                                                    |
-| --- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|         |                                                                                                                                                                                                                                                                                                                                                                     |
+|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Testing | [![Build, Test & Coverage](https://github.com/shloktech/keyedstablehash/actions/workflows/python-package.yml/badge.svg)](https://github.com/shloktech/keyedstablehash/actions/workflows/python-package.yml) [![codecov](https://codecov.io/github/shloktech/keyedstablehash/graph/badge.svg?token=CHQUZ5WUEA)](https://codecov.io/github/shloktech/keyedstablehash) |
-| Package |  [![PyPI](https://img.shields.io/pypi/v/keyedstablehash.svg)](https://pypi.org/project/keyedstablehash/)              [![PyPI Downloads](https://img.shields.io/pypi/dm/keyedstablehash.svg)](https://pypi.org/project/keyedstablehash/)                                                                                                                     |
-| Meta | [![License](https://img.shields.io/github/license/shloktech/keyedstablehash.svg)](https://github.com/shloktech/keyedstablehash/blob/main/LICENSE)                                                                                                                                                                                                                  |
-                                              |
+| Package | [![PyPI](https://img.shields.io/pypi/v/keyedstablehash.svg)](https://pypi.org/project/keyedstablehash/)                                                                                                                                                                   
+|
+| Meta    | [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/shloktech/keyedstablehash/blob/main/LICENSE.txt)                                                                                                                                                                                                                          |
+|
 
----
-
-
-
-`keyedstablehash` solves the problem of generating reproducible, secure hashes for arbitrary Python structures (dicts, lists, primitives) across different processes and machines. Think of it as `stablehash` meets `hashlib`, powered by the **SipHash-2-4** algorithm to prevent hash-flooding attacks.
+`keyedstablehash` solves the problem of generating reproducible, secure hashes for arbitrary Python structures (dicts,
+lists, primitives) across different processes and machines. Think of it as `stablehash` meets `hashlib`, powered by the
+**SipHash-2-4** algorithm to prevent hash-flooding attacks.
 
 ## Why use `keyedstablehash`?
 
-Standard Python `hash()` is randomized per process for security. `hashlib` (md5/sha) is stable but requires manual byte-encoding of objects. `keyedstablehash` gives you the best of both worlds:
+Standard Python `hash()` is randomized per process for security. `hashlib` (md5/sha) is stable but requires manual
+byte-encoding of objects. `keyedstablehash` gives you the best of both worlds:
 
-* **🔒 Secure & Keyed:** Uses **SipHash-2-4** (a keyed pseudorandom function). By keeping your key secret, you prevent adversarial inputs (HashDoS attacks) and ensure hashes cannot be predicted externally.
-* **Reproducible:** Guaranteed deterministic output for a given key and input, regardless of Python version or architecture.
-* **🧠 Smart Canonicalization:** Automatically handles nested dictionaries, sets (order-independent), mixed types, and NumPy scalars. `{a: 1, b: 2}` hashes the same as `{b: 2, a: 1}`.
-* **🐼 Big Data Ready:** First-class support for **Pandas**, **Polars**, and **PyArrow**. Hash millions of rows efficiently without writing fragile loops.
+* **🔒 Secure & Keyed:** Uses **SipHash-2-4** (a keyed pseudorandom function). By keeping your key secret, you prevent
+  adversarial inputs (HashDoS attacks) and ensure hashes cannot be predicted externally.
+* **Reproducible:** Guaranteed deterministic output for a given key and input, regardless of Python version or
+  architecture.
+* **🧠 Smart Canonicalization:** Automatically handles nested dictionaries, sets (order-independent), mixed types, and
+  NumPy scalars. `{a: 1, b: 2}` hashes the same as `{b: 2, a: 1}`.
+* **🐼 Big Data Ready:** First-class support for **Pandas**, **Polars**, and **PyArrow**. Hash millions of rows
+  efficiently without writing fragile loops.
 * **🛠 Type-Safe:** Fully typed with `py.typed` for a seamless IDE experience.
 
 ---
@@ -74,9 +77,9 @@ data = {
 
 h = stable_keyed_hash(data, key=secret_key)
 
-print(f"Hex: {h.hexdigest()}") 
+print(f"Hex: {h.hexdigest()}")
 # -> Hex: 4a1b... (Deterministic across runs)
-print(f"Int: {h.intdigest()}") 
+print(f"Int: {h.intdigest()}")
 # -> Int: 8392... (uint64)
 
 ```
@@ -98,7 +101,8 @@ print(s.hexdigest())
 
 ### 3. Dataframe Vectorization (The Power Feature)
 
-Hash entire columns in Pandas, Polars, or Arrow. This is essential for data de-duplication, shuffling, or anonymization pipelines.
+Hash entire columns in Pandas, Polars, or Arrow. This is essential for data de-duplication, shuffling, or anonymization
+pipelines.
 
 ```python
 import pandas as pd
@@ -123,16 +127,16 @@ hashes = hash_arrow_array(arr, key=secret_key)
 
 To ensure stability, `keyedstablehash` strictly defines how types are converted to bytes before hashing.
 
-| Type | Handling Strategy |
-| --- | --- |
-| **None / Bool** | Tagged with unique type markers. |
-| **Numbers** | `int` (arbitrary precision) and `float` (IEEE-754) are length-prefixed and tagged. |
-| **Strings** | Encoded as UTF-8, length-prefixed. |
-| **Sequences** | `list` and `tuple` are **order-sensitive**. |
-| **Sets** | `set` and `frozenset` are **order-independent**. Elements are hashed individually, sorted by their encoded bytes, and then hashed. |
-| **Mappings** | `dict` is **order-independent**. Key-value pairs are canonically encoded, and items are sorted by the encoded key before hashing. |
-| **Numpy** | Scalars are coerced to native Python equivalents. |
-| **Others** | Falls back to `__dict__` if available; otherwise raises `TypeError`. |
+| Type            | Handling Strategy                                                                                                                  |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------|
+| **None / Bool** | Tagged with unique type markers.                                                                                                   |
+| **Numbers**     | `int` (arbitrary precision) and `float` (IEEE-754) are length-prefixed and tagged.                                                 |
+| **Strings**     | Encoded as UTF-8, length-prefixed.                                                                                                 |
+| **Sequences**   | `list` and `tuple` are **order-sensitive**.                                                                                        |
+| **Sets**        | `set` and `frozenset` are **order-independent**. Elements are hashed individually, sorted by their encoded bytes, and then hashed. |
+| **Mappings**    | `dict` is **order-independent**. Key-value pairs are canonically encoded, and items are sorted by the encoded key before hashing.  |
+| **Numpy**       | Scalars are coerced to native Python equivalents.                                                                                  |
+| **Others**      | Falls back to `__dict__` if available; otherwise raises `TypeError`.                                                               |
 
 ---
 
@@ -149,8 +153,6 @@ To ensure stability, `keyedstablehash` strictly defines how types are converted 
 * Stateful hasher.
 * Methods: `.update(data)`, `.digest()`, `.hexdigest()`, `.intdigest()`, `.copy()`.
 
-
-
 ### Vectorized Helpers
 
 * **`hash_pandas_series(series, key, ...)`**  `pandas.Series[uint64]`
@@ -161,7 +163,8 @@ To ensure stability, `keyedstablehash` strictly defines how types are converted 
 
 ## Roadmap
 
-> **Note:** Current implementation is pure Python. While optimized, it involves Python loop overhead for complex structures.
+> **Note:** Current implementation is pure Python. While optimized, it involves Python loop overhead for complex
+> structures.
 
 1. **C/Rust Backend:** Replace the inner loop with a compiled extension (Rust or C) for significant speedups.
 2. **Contract Tests:** Add cross-version compatibility contracts to ensure hash stability across future library updates.
