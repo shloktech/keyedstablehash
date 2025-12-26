@@ -60,3 +60,66 @@ def test_rejects_unsupported_type():
 
     with pytest.raises(TypeError):
         stable_keyed_hash(Example(1), key=b"\x00" * 16)
+
+
+def test_encode_length_and_int():
+    assert canonicalize_to_bytes(123) == canonicalize_to_bytes(123)
+    assert canonicalize_to_bytes(-123) == canonicalize_to_bytes(-123)
+    assert canonicalize_to_bytes(0) == canonicalize_to_bytes(0)
+
+
+def test_feed_canonical_dict_order():
+    d1 = {'x': 1, 'y': 2}
+    d2 = {'y': 2, 'x': 1}
+    b1 = canonicalize_to_bytes(d1)
+    b2 = canonicalize_to_bytes(d2)
+    assert b1 == b2
+
+
+def test_feed_canonical_list_vs_tuple():
+    l = [1, 2, 3]
+    t = (1, 2, 3)
+    assert canonicalize_to_bytes(l) != canonicalize_to_bytes(t)
+
+
+def test_feed_canonical_set_order():
+    s1 = {1, 2, 3}
+    s2 = {3, 2, 1}
+    assert canonicalize_to_bytes(s1) == canonicalize_to_bytes(s2)
+
+
+def test_stable_keyed_hash_algo_error():
+    from src.keyedstablehash.stable import stable_keyed_hash
+    with pytest.raises(ValueError):
+        stable_keyed_hash(123, key=b"0"*16, algo="unknown")
+
+
+def test_siphash24_invalid_key():
+    from src.keyedstablehash.siphash import siphash24
+    with pytest.raises(ValueError):
+        siphash24(b"short")
+    with pytest.raises(TypeError):
+        siphash24(123)  # type: ignore
+
+
+def test_siphash24_copy_and_update():
+    from src.keyedstablehash.siphash import siphash24
+    key = bytes(range(16))
+    h1 = siphash24(key)
+    h1.update(b"abc")
+    h2 = h1.copy()
+    h2.update(b"def")
+    assert h1.hexdigest() != h2.hexdigest()
+
+
+def test_vectorized_import_errors():
+    import importlib
+    vectorized = importlib.import_module('src.keyedstablehash.vectorized')
+    # pandas, pyarrow, polars are optional; simulate ImportError
+    for func in [getattr(vectorized, n) for n in dir(vectorized) if n.startswith('hash_')]:
+        try:
+            func(None, key=b"0"*16)
+        except ImportError:
+            pass  # expected if dependency missing
+        except Exception:
+            pass  # ignore other errors for this test

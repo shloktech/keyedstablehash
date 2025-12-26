@@ -121,7 +121,9 @@ def feed_canonical(value: Any, write: Callable[[bytes], None]) -> None:
     if hasattr(value, "__dict__"):
         write(b"O")
         type_name = (
-            f"{value.__class__.__module__}.{value.__class__.__qualname__}".encode("utf-8")
+            f"{value.__class__.__module__}.{value.__class__.__qualname__}".encode(
+                "utf-8"
+            )
         )
         write(_encode_length(len(type_name)))
         write(type_name)
