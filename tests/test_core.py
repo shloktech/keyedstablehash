@@ -121,7 +121,7 @@ def test_siphash24_copy_and_update():
 def test_vectorized_import_errors():
     import importlib
 
-    vectorized = importlib.import_module("keyedstablehash.vectorized")
+    vectorized = importlib.import_module("src.keyedstablehash.vectorized")
     # pandas, pyarrow, polars are optional; simulate ImportError
     for func in [
         getattr(vectorized, n) for n in dir(vectorized) if n.startswith("hash_")
