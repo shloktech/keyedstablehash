@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import struct
 from collections.abc import Mapping
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 try:
     import numpy as _np  # type: ignore
@@ -121,7 +121,9 @@ def feed_canonical(value: Any, write: Callable[[bytes], None]) -> None:
     if hasattr(value, "__dict__"):
         write(b"O")
         type_name = (
-            f"{value.__class__.__module__}.{value.__class__.__qualname__}".encode("utf-8")
+            f"{value.__class__.__module__}.{value.__class__.__qualname__}".encode(
+                "utf-8"
+            )
         )
         write(_encode_length(len(type_name)))
         write(type_name)

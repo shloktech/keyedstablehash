@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import struct
-from typing import Callable, Optional
 
 _MASK_64 = 0xFFFFFFFFFFFFFFFF
 
