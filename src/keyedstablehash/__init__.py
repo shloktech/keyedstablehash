@@ -2,8 +2,8 @@
 Stable, keyed hashing for Python objects and columnar data.
 """
 
-from .stable import stable_keyed_hash, KeyedStableHash
 from .siphash import siphash24, SipHash24
+from .stable import stable_keyed_hash, KeyedStableHash
 from .vectorized import (
     hash_arrow_array,
     hash_pandas_series,

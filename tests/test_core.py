@@ -4,7 +4,6 @@ from src.keyedstablehash.canonical import canonicalize_to_bytes
 from src.keyedstablehash.siphash import siphash24
 from src.keyedstablehash.stable import stable_keyed_hash
 
-
 SIPHASH_VECTORS = {
     0: "310e0edd47db6f72",
     1: "fd67dc93c539f874",
