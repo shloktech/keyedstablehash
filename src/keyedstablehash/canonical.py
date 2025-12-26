@@ -122,8 +122,7 @@ def _handle_object(value, write):
     write(b"O")
     type_name = (
         f"{value.__class__.__module__}."
-        f"{value.__class__.__qualname__}"
-        .encode("utf-8")
+        f"{value.__class__.__qualname__}".encode("utf-8")
     )
     write(_encode_length(len(type_name)))
     write(type_name)
