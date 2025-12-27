@@ -52,7 +52,7 @@ jobs:
     - name: Test with pytest
       run: |
         # Generates an XML report required by Codecov
-        pytest --cov=keyedstablehash --cov-report=xml --cov-report=term
+        pytest --cov=src/keyedstablehash --cov-report=term --cov-report=xml
 
     # 6. Upload Coverage: Send report to Codecov.io
     - name: Upload coverage to Codecov
