@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="keyedstablehash",
-    version="0.0.4",
+    version="0.0.5",
     description="Stable, keyed hashing for Python objects and columnar data. Think `stablehash`, but with SipHash-like keyed PRF semantics so hashes are deterministic for a given key and resistant to adversarial inputs.",
     long_description=open("Readme.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
