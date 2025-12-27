@@ -1,9 +1,13 @@
 import sys
 import os
+import struct
+from unittest.mock import patch
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import pytest
 
+import src.keyedstablehash.canonical as canonical_module
 from src.keyedstablehash.canonical import canonicalize_to_bytes
 from src.keyedstablehash.siphash import siphash24
 from src.keyedstablehash.stable import stable_keyed_hash
@@ -83,6 +87,8 @@ def test_feed_canonical_list_vs_tuple():
     lst = [1, 2, 3]
     t = (1, 2, 3)
     assert canonicalize_to_bytes(lst) != canonicalize_to_bytes(t)
+    assert canonicalize_to_bytes(lst).startswith(b"L")
+    assert canonicalize_to_bytes(t).startswith(b"T")
 
 
 def test_feed_canonical_set_order():
@@ -136,33 +142,54 @@ def test_vectorized_import_errors():
 
 def test_encode_int_edge_cases():
     actual_0 = canonicalize_to_bytes(0)
-    expected_0 = b'I\x01\x00\x00\x00\x00\x00\x00\x00\x00'
+    expected_0 = b"I\x01\x00\x00\x00\x00\x00\x00\x00\x00"
     assert actual_0 == expected_0
 
     actual_1 = canonicalize_to_bytes(1)
-    expected_1 = b'I\x01\x00\x00\x00\x00\x00\x00\x00\x01'
+    expected_1 = b"I\x01\x00\x00\x00\x00\x00\x00\x00\x01"
     assert actual_1 == expected_1
 
     actual_minus_1 = canonicalize_to_bytes(-1)
-    expected_minus_1 = b'I\x01\x00\x00\x00\x00\x00\x00\x00\xff'
+    expected_minus_1 = b"I\x01\x00\x00\x00\x00\x00\x00\x00\xff"
     assert actual_minus_1 == expected_minus_1
 
     actual_max_int = canonicalize_to_bytes(2**63 - 1)
-    expected_max_int = b'I\x08\x00\x00\x00\x00\x00\x00\x00\x7f\xff\xff\xff\xff\xff\xff\xff'
+    expected_max_int = (
+        b"I\x08\x00\x00\x00\x00\x00\x00\x00\x7f\xff\xff\xff\xff\xff\xff\xff"
+    )
     assert actual_max_int == expected_max_int
 
-    actual_min_int = canonicalize_to_bytes(-2**63)
-    expected_min_int = b'I\x08\x00\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00'
+    actual_min_int = canonicalize_to_bytes(-(2**63))
+    expected_min_int = (
+        b"I\x08\x00\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00"
+    )
     assert actual_min_int == expected_min_int
 
 
 def test_normalize_scalar_numpy_generic():
     try:
         import numpy as np
+
         val = np.int64(10)
         assert canonicalize_to_bytes(val) == canonicalize_to_bytes(10)
     except ImportError:
         pytest.skip("Numpy not installed")
+
+
+def test_numpy_mock_normalization():
+    """Test numpy normalization even if numpy is not installed on the system."""
+
+    class FakeGeneric:
+        def item(self):
+            return 99
+
+    # Patch _NUMPY_GENERIC to include our fake class
+    # If numpy is missing, _NUMPY_GENERIC is (), so we make it (FakeGeneric,)
+    # If numpy is present, we add FakeGeneric to it.
+    with patch.object(canonical_module, "_NUMPY_GENERIC", (FakeGeneric,)):
+        fake_val = FakeGeneric()
+        # Should normalize to 99 -> int encoding
+        assert canonicalize_to_bytes(fake_val) == canonicalize_to_bytes(99)
 
 
 def test_handle_object_with_dict():
@@ -170,13 +197,63 @@ def test_handle_object_with_dict():
         def __init__(self, a, b):
             self.a = a
             self.b = b
+
     obj = MyClass(1, "test")
     # Dynamically get the type name as it would be canonicalized
-    type_name = (
-        f"{obj.__class__.__module__}."
-        f"{obj.__class__.__qualname__}".encode("utf-8")
+    type_name = f"{obj.__class__.__module__}." f"{obj.__class__.__qualname__}".encode(
+        "utf-8"
     )
     canonical_vars = canonicalize_to_bytes({"a": 1, "b": "test"})
-    expected_bytes_with_type = b'O' + len(type_name).to_bytes(8, 'little') + type_name + canonical_vars
+    expected_bytes_with_type = (
+        b"O" + len(type_name).to_bytes(8, "little") + type_name + canonical_vars
+    )
     actual_obj_bytes = canonicalize_to_bytes(obj)
     assert actual_obj_bytes == expected_bytes_with_type
+
+
+def test_canonical_none():
+    """Test coverage for _handle_none."""
+    assert canonicalize_to_bytes(None) == b"N"
+
+
+def test_canonical_bool():
+    """Test coverage for _handle_bool."""
+    # True -> b"B\x01"
+    assert canonicalize_to_bytes(True) == b"B\x01"
+    # False -> b"B\x00"
+    assert canonicalize_to_bytes(False) == b"B\x00"
+
+
+def test_canonical_float():
+    """Test coverage for _handle_float."""
+    val = 123.456
+    expected = b"F" + struct.pack("<d", val)
+    assert canonicalize_to_bytes(val) == expected
+
+
+def test_canonical_bytes_types():
+    """Test coverage for _handle_bytes (bytes, bytearray, memoryview)."""
+    raw = b"data"
+    # Tag 'Y' + Length (8 bytes little endian) + Data
+    expected_len = struct.pack("<Q", 4)
+    expected = b"Y" + expected_len + raw
+
+    assert canonicalize_to_bytes(raw) == expected
+    assert canonicalize_to_bytes(bytearray(raw)) == expected
+    assert canonicalize_to_bytes(memoryview(raw)) == expected
+
+
+def test_canonical_str():
+    """Explicit test coverage for _handle_str."""
+    s = "hello"
+    s_bytes = s.encode("utf-8")
+    expected = b"S" + struct.pack("<Q", len(s_bytes)) + s_bytes
+    assert canonicalize_to_bytes(s) == expected
+
+
+def test_canonical_frozenset():
+    """Test coverage for frozenset (handled via _handle_set)."""
+    fs = frozenset([3, 1, 2])
+    s = {1, 2, 3}
+    # Should produce identical canonical bytes
+    assert canonicalize_to_bytes(fs) == canonicalize_to_bytes(s)
