@@ -17,7 +17,7 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
-    install_requires=[],
+    install_requires=['numpy>=1.24'],
     extras_require={
         "dataframes": ["pandas"],
         "arrow": ["pyarrow"],
